@@ -1,5 +1,5 @@
-import * as assert from 'assert';
-import test, { describe } from 'node:test';
+import * as assert from 'node:assert/strict';
+import { describe, test } from 'node:test';
 import parse from '../parse.js';
 import v1, { updateV1State } from '../v1.js';
 
@@ -36,7 +36,7 @@ const RFC_RANDOM = Uint8Array.of(
   RFC_OPTIONS.clockseq & 0xff,
 
   // node
-  ...RFC_OPTIONS.node
+  ...RFC_OPTIONS.node,
 );
 
 // Compare v1 timestamp fields chronologically
@@ -69,13 +69,25 @@ describe('v1', () => {
   });
 
   test('v1(options)', () => {
-    assert.equal(v1({ msecs: RFC_OPTIONS.msecs, random: RFC_RANDOM }), RFC_V1, 'minimal options');
+    assert.equal(
+      v1({ msecs: RFC_OPTIONS.msecs, random: RFC_RANDOM }),
+      RFC_V1,
+      'minimal options',
+    );
     assert.equal(v1(RFC_OPTIONS), RFC_V1, 'full options');
   });
 
   test('v1(options) equality', () => {
-    assert.notEqual(v1({ msecs: TIME }), v1({ msecs: TIME }), 'UUIDs with minimal options differ');
-    assert.equal(v1(RFC_OPTIONS), v1(RFC_OPTIONS), 'UUIDs with full options are identical');
+    assert.notEqual(
+      v1({ msecs: TIME }),
+      v1({ msecs: TIME }),
+      'UUIDs with minimal options differ',
+    );
+    assert.equal(
+      v1(RFC_OPTIONS),
+      v1(RFC_OPTIONS),
+      'UUIDs with full options are identical',
+    );
   });
 
   test('fills one UUID into a buffer as expected', () => {
@@ -165,7 +177,11 @@ describe('v1', () => {
       },
     ];
     for (const { title, state, now, expected } of tests) {
-      assert.deepStrictEqual(updateV1State(state, now, RFC_RANDOM), expected, `Failed: ${title}`);
+      assert.deepStrictEqual(
+        updateV1State(state, now, RFC_RANDOM),
+        expected,
+        `Failed: ${title}`,
+      );
     }
   });
 
@@ -188,8 +204,8 @@ describe('v1', () => {
   test('throws RangeError for out-of-range indexes', () => {
     const buf15 = new Uint8Array(15);
     const buf30 = new Uint8Array(30);
-    assert.throws(() => v1({}, buf15));
-    assert.throws(() => v1({}, buf30, -1));
-    assert.throws(() => v1({}, buf30, 15));
+    assert.throws(() => v1({}, buf15), RangeError);
+    assert.throws(() => v1({}, buf30, -1), RangeError);
+    assert.throws(() => v1({}, buf30, 15), RangeError);
   });
 });

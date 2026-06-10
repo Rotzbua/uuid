@@ -1,5 +1,5 @@
-import * as assert from 'assert';
-import test, { describe } from 'node:test';
+import * as assert from 'node:assert/strict';
+import { describe, test } from 'node:test';
 import v1ToV6 from '../v1ToV6.js';
 import v6 from '../v6.js';
 import v6ToV1 from '../v6ToV1.js';
@@ -31,16 +31,18 @@ describe('v6', () => {
     0x3c,
     0xbb,
     0x32,
-    0x10
+    0x10,
   );
 
   test('default behavior', () => {
     // Verify explicit options produce expected id
     const id = v6();
     assert.ok(
-      /[0-9a-f]{8}-[0-9a-f]{4}-6[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/.test(id),
+      /[0-9a-f]{8}-[0-9a-f]{4}-6[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/.test(
+        id,
+      ),
 
-      'id is valid v6 UUID'
+      'id is valid v6 UUID',
     );
   });
 
@@ -76,6 +78,14 @@ describe('v6', () => {
     expectedBuf.set(EXPECTED_BYTES, 16);
 
     assert.deepEqual(buffer, expectedBuf);
+  });
+
+  test('throws RangeError for out-of-range indexes', () => {
+    const buf15 = new Uint8Array(15);
+    const buf30 = new Uint8Array(30);
+    assert.throws(() => v6({}, buf15), RangeError);
+    assert.throws(() => v6({}, buf30, -1), RangeError);
+    assert.throws(() => v6({}, buf30, 15), RangeError);
   });
 
   test('v1 -> v6 conversion', () => {

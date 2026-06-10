@@ -6,8 +6,8 @@ export default function test(callback) {
         'body {font-family: monospace;}',
         'dt, dd {display: inline-block; margin: 0;}',
         'dt {min-width: 15em;}',
-      ].join('\n')
-    )
+      ].join('\n'),
+    ),
   );
   document.body.appendChild(style);
 
@@ -24,7 +24,7 @@ export default function test(callback) {
     } else {
       el = document.createElement('div');
       el.className = 'test_result';
-      el.innerHTML = '<dt>' + title + '</dt>: <dd>' + result + '</dd>';
+      el.innerHTML = `<dt>${title}</dt>: <dd>${result}</dd>`;
     }
 
     document.body.appendChild(el);
@@ -33,6 +33,7 @@ export default function test(callback) {
   function done() {
     const div = document.createElement('h2');
     div.id = 'done';
+    div.innerHTML = 'Done';
     document.body.appendChild(div);
   }
 

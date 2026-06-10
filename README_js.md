@@ -1,20 +1,40 @@
-```javascript --hide
-runmd.onRequire = (path) => {
-  if (path == 'rng') return fun;
-  return path.replace(/^uuid/, './dist/cjs/');
+```javascript --run
+runmd.importMap = {
+  imports: {
+    uuid: './dist/index.js',
+  },
 };
 
-// Shim Date and crypto so generated ids are consistent across doc revisions
-runmd.Date.now = () => 1551914748172;
+// DOCS ONLY! Monkey patch for repeatable Date APIs
+(function () {
+  Date.now = () => new Date('2025-1-1Z').getTime();
+})();
 
-let seed = 0xdefaced;
-require('crypto').randomFillSync = function (a) {
-  for (let i = 0; i < 16; i++) a[i] = (seed = (seed * 0x41a7) & 0x7fffffff) & 0xff;
-  return a;
-};
+// DOCS ONLY! Monkey patch for repeatable crypto APIs
+(function () {
+  // mulberry32 rng
+  let seed = 0xfeedface;
+  function rng() {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
+  }
 
-// Prevent usage of native randomUUID implementation to ensure deterministic UUIDs
-require('crypto').randomUUID = undefined;
+  crypto.getRandomValues = function (arr) {
+    for (let i = 0; i < arr.length; i++) {
+      arr[i] = Math.floor(rng() * 0x100);
+    }
+
+    return arr;
+  };
+
+  crypto.randomUUID = function () {
+    return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
+      (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
+    );
+  };
+})();
 ```
 
 # uuid [![CI](https://github.com/uuidjs/uuid/workflows/CI/badge.svg)](https://github.com/uuidjs/uuid/actions?query=workflow%3ACI) [![Browser](https://github.com/uuidjs/uuid/workflows/Browser/badge.svg)](https://github.com/uuidjs/uuid/actions/workflows/browser.yml)
@@ -23,7 +43,6 @@ For the creation of [RFC9562](https://www.rfc-editor.org/rfc/rfc9562.html) (form
 
 - **Complete** - Support for all RFC9562 UUID versions
 - **Cross-platform** - Support for...
-  - ESM & Common JS
   - [Typescript](#support)
   - [Chrome, Safari, Firefox, and Edge](#support)
   - [NodeJS](#support)
@@ -34,10 +53,8 @@ For the creation of [RFC9562](https://www.rfc-editor.org/rfc/rfc9562.html) (form
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> `uuid@11` is now available:  See the [CHANGELOG](./CHANGELOG.md) for details. TL;DR:
-> * TypeScript support is now included  (remove `@types/uuid` from your dependencies)
-> * Subtle changes to how the `options` arg is interpreted for `v1()`, `v6()`, and `v7()`. [See details](#options-handling-for-timestamp-uuids)
-> * Binary UUIDs are now `Uint8Array`s.  (May impact callers of `parse()`, `stringify()`,  or that pass an `option#buf` argument to `v1()`-`v7()`.)
+>
+> Starting with `uuid@12` CommonJS is no longer supported.  See [implications](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c) and [motivation](https://github.com/uuidjs/uuid/issues/881) for details.
 
 ## Quickstart
 
@@ -49,17 +66,9 @@ npm install uuid
 
 **2. Create a UUID**
 
-ESM-syntax (must use named exports):
-
 ```javascript --run
 import { v4 as uuidv4 } from 'uuid';
-uuidv4(); // RESULT
-```
 
-... CommonJS:
-
-```javascript --run
-const { v4: uuidv4 } = require('uuid');
 uuidv4(); // RESULT
 ```
 
@@ -189,18 +198,10 @@ Create an RFC version 1 (timestamp) UUID
 | [`options.nsecs = 0`] | RFC "timestamp" field (`Number` of nanoseconds to add to `msecs`, should be 0-10,000) |
 | [`options.random = (random)`] | `Array` of 16 random bytes (0-255) used to generate other fields, above |
 | [`options.rng`] | Alternative to `options.random`, a `Function` that returns an `Array` of 16 random bytes (0-255) |
-| [`buffer`] | `Uint8Array` If provided, binary UUID is written into the array, starting at `offset` |
+| [`buffer`] | `Uint8Array` or `Uint8Array` subtype (e.g. Node.js `Buffer`). If provided, binary UUID is written into the array, starting at `offset` |
 | [`offset` = 0] | `Number` Index to start writing UUID bytes in `buffer` |
 | _returns_ | UUID `String` if no `buffer` is specified, otherwise returns `buffer` |
 | _throws_ | `Error` if more than 10M UUIDs/sec are requested |
-
-<!-- prettier-ignore -->
-> [!NOTE]
-> The default [node id](https://datatracker.ietf.org/doc/html/rfc9562#section-5.1) (the last 12 digits in the UUID) is generated once, randomly, on process startup, and then remains unchanged for the duration of the process.
-
-<!-- prettier-ignore -->
-> [!NOTE]
-> `options.random` and `options.rng` are only meaningful on the very first call to `v1()`, where they may be passed to initialize the internal `node` and `clockseq` fields.
 
 Example:
 
@@ -253,7 +254,7 @@ Create an RFC version 4 (random) UUID
 | [`options`] | `Object` with one or more of the following properties: |
 | [`options.random`] | `Array` of 16 random bytes (0-255) |
 | [`options.rng`] | Alternative to `options.random`, a `Function` that returns an `Array` of 16 random bytes (0-255) |
-| [`buffer`] | `Uint8Array` If provided, binary UUID is written into the array, starting at `offset` |
+| [`buffer`] | `Uint8Array` or `Uint8Array` subtype (e.g. Node.js `Buffer`). If provided, binary UUID is written into the array, starting at `offset` |
 | [`offset` = 0] | `Number` Index to start writing UUID bytes in `buffer` |
 | _returns_ | UUID `String` if no `buffer` is specified, otherwise returns `buffer` |
 
@@ -301,7 +302,7 @@ Create an RFC version 5 (namespace w/ SHA-1) UUID
 | --- | --- |
 | `name` | `String \| Array` |
 | `namespace` | `String \| Array[16]` Namespace UUID |
-| [`buffer`] | `Uint8Array` If provided, binary UUID is written into the array, starting at `offset` |
+| [`buffer`] | `Uint8Array` or `Uint8Array` subtype (e.g. Node.js `Buffer`). If provided, binary UUID is written into the array, starting at `offset` |
 | [`offset` = 0] | `Number` Index to start writing UUID bytes in `buffer` |
 | _returns_ | UUID `String` if no `buffer` is specified, otherwise returns `buffer` |
 
@@ -376,7 +377,7 @@ Create an RFC version 7 (random) UUID
 | [`options.random = (random)`] | `Array` of 16 random bytes (0-255) used to generate other fields, above |
 | [`options.rng`] | Alternative to `options.random`, a `Function` that returns an `Array` of 16 random bytes (0-255) |
 | [`options.seq = (random)`] | 32-bit sequence `Number` between 0 - 0xffffffff. This may be provided to help ensure uniqueness for UUIDs generated within the same millisecond time interval. Default = random value. |
-| [`buffer`] | `Uint8Array` If provided, binary UUID is written into the array, starting at `offset` |
+| [`buffer`] | `Uint8Array` or `Uint8Array` subtype (e.g. Node.js `Buffer`). If provided, binary UUID is written into the array, starting at `offset` |
 | [`offset` = 0] | `Number` Index to start writing UUID bytes in `buffer` |
 | _returns_ | UUID `String` if no `buffer` is specified, otherwise returns `buffer` |
 
@@ -492,13 +493,13 @@ Prior to `uuid@11`, it was possible for `options` state to interfere with the in
 
 **Browsers**: `uuid` [builds are tested](/uuidjs/uuid/blob/main/wdio.conf.js) against the latest version of desktop Chrome, Safari, Firefox, and Edge. Mobile versions of these same browsers are expected to work but aren't currently tested.
 
-**Node**: `uuid` [builds are tested](https://github.com/uuidjs/uuid/blob/main/.github/workflows/ci.yml#L26-L27) against node ([LTS releases](https://github.com/nodejs/Release)), plus one prior. E.g. `node@18` is in maintainence mode, and `node@22` is the current LTS release. So `uuid` supports `node@16`-`node@22`.
+**Node**: `uuid` [builds are tested](https://github.com/uuidjs/uuid/blob/main/.github/workflows/ci.yml#L26-L27) against node ([LTS releases](https://github.com/nodejs/Release)), plus one prior. E.g. At the time of this writing `node@20` is the "maintenance" release and `node@24` is the "current" release, so `uuid` supports `node@20`-`node@24`.
 
 **Typescript**: TS versions released within the past two years are supported. [source](https://github.com/microsoft/TypeScript/issues/49088#issuecomment-2468723715)
 
 ## Known issues
 
-<!-- This header is referenced as an anchor in src/rng-browser.ts -->
+<!-- This header is referenced as an anchor in src/rng.ts -->
 
 ### "getRandomValues() not supported"
 

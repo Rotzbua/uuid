@@ -9,8 +9,8 @@ export default function benchmark(uuid, Benchmark) {
     });
 
     const BYTES = [
-      0x0f, 0x5a, 0xbc, 0xd1, 0xc1, 0x94, 0x47, 0xf3, 0x90, 0x5b, 0x2d, 0xf7, 0x26, 0x3a, 0x08,
-      0x4b,
+      0x0f, 0x5a, 0xbc, 0xd1, 0xc1, 0x94, 0x47, 0xf3, 0x90, 0x5b, 0x2d, 0xf7,
+      0x26, 0x3a, 0x08, 0x4b,
     ];
 
     suite
@@ -51,17 +51,17 @@ export default function benchmark(uuid, Benchmark) {
           // (which can happen on modern hardware and modern Node.js versions).
         }
       })
-      .add('uuid.v4()', function () {
+      .add('uuid.v4() using crypto.randomUUID', function () {
         uuid.v4();
+      })
+      .add('uuid.v4() w/out crypto.randomUUID', function () {
+        uuid.v4({}); // passing an object instead of null bypasses native.randomUUID
       })
       .add('uuid.v4() fill existing array', function () {
         uuid.v4(null, array, 0);
       })
-      .add('uuid.v4() without native generation', function () {
-        uuid.v4({}); // passing an object instead of null bypasses native.randomUUID
-      })
-      .add('uuid.v3()', function () {
-        uuid.v3('hello.example.com', uuid.v3.DNS);
+      .add('crypto.randomUUID()', function () {
+        crypto.randomUUID();
       })
       .add('uuid.v5()', function () {
         uuid.v5('hello.example.com', uuid.v5.DNS);
@@ -76,15 +76,13 @@ export default function benchmark(uuid, Benchmark) {
         uuid.v7(null, array, 0);
       })
       .add('uuid.v7() with defined time', function () {
-        uuid.v7({
-          msecs: 1645557742000,
-        });
+        uuid.v7({ msecs: 1645557742000 });
       })
       .on('cycle', function (event) {
         console.log(event.target.toString());
       })
       .on('complete', function () {
-        console.log('Fastest is ' + this.filter('fastest').map('name'));
+        console.log(`Fastest is ${this.filter('fastest').map('name')}`);
         console.log('---\n');
       })
       .run();

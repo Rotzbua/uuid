@@ -1,4 +1,4 @@
-import * as assert from 'assert';
+import * as assert from 'node:assert/strict';
 
 import v1 from './v1.js';
 import v3 from './v3.js';
@@ -18,7 +18,7 @@ function usage() {
   console.log('  uuid v7');
   console.log('  uuid --help');
   console.log(
-    '\nNote: <namespace uuid> may be "URL" or "DNS" to use the corresponding UUIDs defined by RFC9562'
+    '\nNote: <namespace uuid> may be "URL" or "DNS" to use the corresponding UUIDs defined by RFC9562',
   );
 }
 

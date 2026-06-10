@@ -1,6 +1,5 @@
-import * as assert from 'assert';
-import test, { describe } from 'node:test';
-import native from '../native.js';
+import * as assert from 'node:assert/strict';
+import { describe, test } from 'node:test';
 import v4 from '../v4.js';
 
 const randomBytesFixture = Uint8Array.of(
@@ -19,7 +18,7 @@ const randomBytesFixture = Uint8Array.of(
   0x67,
   0x1c,
   0x58,
-  0x36
+  0x36,
 );
 
 const expectedBytes = Uint8Array.of(
@@ -38,7 +37,7 @@ const expectedBytes = Uint8Array.of(
   103,
   28,
   88,
-  54
+  54,
 );
 
 describe('v4', () => {
@@ -49,40 +48,24 @@ describe('v4', () => {
     assert.ok(id1 !== id2);
   });
 
-  test('should uses native randomUUID() if no option is passed', async () => {
-    // TODO: `mock` is not supported until node@18, so we feature-detect it
-    // here.  Once node@16 drops off our support matrix, we can just
-    // static-import it normally
-    const mock = (await import('node:test')).default.mock;
-    if (!mock) {
-      return;
-    }
+  test('should use native randomUUID() if no option is passed', async (t) => {
+    const mocked = t.mock.method(crypto, 'randomUUID', () => 'mocked-uuid');
 
-    const mockRandomUUID = mock.method(native, 'randomUUID');
-
-    assert.equal(mockRandomUUID.mock.callCount(), 0);
+    assert.equal(mocked.mock.callCount(), 0);
     v4();
-    assert.equal(mockRandomUUID.mock.callCount(), 1);
+    assert.equal(mocked.mock.callCount(), 1);
 
-    mock.restoreAll();
+    t.mock.reset();
   });
 
-  test('should not use native randomUUID() if an option is passed', async () => {
-    // TODO: `mock` is not supported until node@18, so we feature-detect it
-    // here.  Once node@16 drops off our support matrix, we can just
-    // static-import it normally
-    const mock = (await import('node:test')).default.mock;
-    if (!mock) {
-      return;
-    }
+  test('should not use native randomUUID() if an option is passed', async (t) => {
+    const mocked = t.mock.method(crypto, 'randomUUID', () => 'mocked-uuid');
 
-    const mockRandomUUID = mock.method(native, 'randomUUID');
-
-    assert.equal(mockRandomUUID.mock.callCount(), 0);
+    assert.equal(mocked.mock.callCount(), 0);
     v4({});
-    assert.equal(mockRandomUUID.mock.callCount(), 0);
+    assert.equal(mocked.mock.callCount(), 0);
 
-    mock.restoreAll();
+    t.mock.reset();
   });
 
   test('explicit options.random produces expected result', () => {
@@ -134,8 +117,8 @@ describe('v4', () => {
   test('throws RangeError for out-of-range indexes', () => {
     const buf15 = new Uint8Array(15);
     const buf30 = new Uint8Array(30);
-    assert.throws(() => v4({}, buf15));
-    assert.throws(() => v4({}, buf30, -1));
-    assert.throws(() => v4({}, buf30, 15));
+    assert.throws(() => v4({}, buf15), RangeError);
+    assert.throws(() => v4({}, buf30, -1), RangeError);
+    assert.throws(() => v4({}, buf30, 15), RangeError);
   });
 });

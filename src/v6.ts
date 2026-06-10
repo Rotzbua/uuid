@@ -1,11 +1,23 @@
-import { UUIDTypes, Version6Options } from './types.js';
 import { unsafeStringify } from './stringify.js';
+import type { UUIDTypes, Version6Options } from './types.js';
 import v1 from './v1.js';
 import v1ToV6 from './v1ToV6.js';
 
-function v6(options?: Version6Options, buf?: undefined, offset?: number): string;
-function v6(options: Version6Options | undefined, buf: Uint8Array, offset?: number): Uint8Array;
-function v6(options?: Version6Options, buf?: Uint8Array, offset?: number): UUIDTypes {
+function v6(
+  options?: Version6Options,
+  buf?: undefined,
+  offset?: number,
+): string;
+function v6<TBuf extends Uint8Array = Uint8Array>(
+  options: Version6Options | undefined,
+  buf: TBuf,
+  offset?: number,
+): TBuf;
+function v6<TBuf extends Uint8Array = Uint8Array>(
+  options?: Version6Options,
+  buf?: TBuf,
+  offset?: number,
+): UUIDTypes<TBuf> {
   options ??= {};
   offset ??= 0;
 
@@ -19,6 +31,12 @@ function v6(options?: Version6Options, buf?: Uint8Array, offset?: number): UUIDT
 
   // Return as a byte array if requested
   if (buf) {
+    if (offset < 0 || offset + 16 > buf.length) {
+      throw new RangeError(
+        `UUID byte range ${offset}:${offset + 15} is out of buffer bounds`,
+      );
+    }
+
     for (let i = 0; i < 16; i++) {
       buf[offset + i] = bytes[i];
     }

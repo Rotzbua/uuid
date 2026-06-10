@@ -1,5 +1,5 @@
-import * as assert from 'assert';
-import test, { describe } from 'node:test';
+import * as assert from 'node:assert/strict';
+import { describe, test } from 'node:test';
 import validate from '../validate.js';
 import { TESTS } from './test_constants.js';
 
@@ -9,7 +9,7 @@ describe('validate()', () => {
       assert.strictEqual(
         validate(value),
         expectedValidate,
-        `validate(${value}) should be ${expectedValidate}`
+        `validate(${value}) should be ${expectedValidate}`,
       );
     }
   });

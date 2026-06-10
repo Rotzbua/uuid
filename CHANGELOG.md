@@ -1,5 +1,59 @@
 # Change Log
 
+## [14.0.0](https://github.com/uuidjs/uuid/compare/v13.0.0...v14.0.0) (2026-04-19)
+
+
+### Security
+
+* Fixes [GHSA-w5hq-g745-h8pq](https://github.com/uuidjs/uuid/security/advisories/GHSA-w5hq-g745-h8pq): `v3()`, `v5()`, and `v6()` did not validate that writes would remain within the bounds of a caller-supplied buffer, allowing out-of-bounds writes when an invalid `offset` was provided. A `RangeError` is now thrown if `offset < 0` or `offset + 16 > buf.length`.
+
+
+### ⚠ BREAKING CHANGES
+
+* `crypto` is now expected to be globally defined (requires node@20+) ([#935](https://github.com/uuidjs/uuid/issues/935))
+* drop node@18 support ([#934](https://github.com/uuidjs/uuid/issues/934))
+* upgrade minimum supported TypeScript version to 5.4.3, in keeping with the project's policy of supporting TypeScript versions released within the last two years
+
+## [13.0.0](https://github.com/uuidjs/uuid/compare/v12.0.0...v13.0.0) (2025-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* make browser exports the default ([#901](https://github.com/uuidjs/uuid/issues/901))
+
+### Bug Fixes
+
+* make browser exports the default ([#901](https://github.com/uuidjs/uuid/issues/901)) ([bce9d72](https://github.com/uuidjs/uuid/commit/bce9d72a3ae5b9a3dcd8eb21ef6d1820288a427a))
+
+## [12.0.0](https://github.com/uuidjs/uuid/compare/v11.1.0...v12.0.0) (2025-09-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* update to typescript@5.2 ([#887](https://github.com/uuidjs/uuid/issues/887))
+* remove CommonJS support ([#886](https://github.com/uuidjs/uuid/issues/886))
+* drop node@16 support ([#883](https://github.com/uuidjs/uuid/issues/883))
+
+### Features
+
+* add node@24 to ci matrix ([#879](https://github.com/uuidjs/uuid/issues/879)) ([42b6178](https://github.com/uuidjs/uuid/commit/42b6178aa21a593257f0a72abacd220f0b7b8a92))
+* drop node@16 support ([#883](https://github.com/uuidjs/uuid/issues/883)) ([0f38cf1](https://github.com/uuidjs/uuid/commit/0f38cf10366ab074f9328ae2021eea04d5f2e530))
+* remove CommonJS support ([#886](https://github.com/uuidjs/uuid/issues/886)) ([ae786e2](https://github.com/uuidjs/uuid/commit/ae786e27265f50bcf7cead196c29f1869297c42f))
+* update to typescript@5.2 ([#887](https://github.com/uuidjs/uuid/issues/887)) ([c7ee405](https://github.com/uuidjs/uuid/commit/c7ee40598ed78584d81ab78dffded9fe5ff20b01))
+
+
+### Bug Fixes
+
+* improve v4() performance ([#894](https://github.com/uuidjs/uuid/issues/894)) ([5fd974c](https://github.com/uuidjs/uuid/commit/5fd974c12718c8848035650b69b8948f12ace197))
+* restore node: prefix ([#889](https://github.com/uuidjs/uuid/issues/889)) ([e1f42a3](https://github.com/uuidjs/uuid/commit/e1f42a354593093ba0479f0b4047dae82d28c507))
+
+## [11.1.0](https://github.com/uuidjs/uuid/compare/v11.0.5...v11.1.0) (2025-02-19)
+
+
+### Features
+
+* update TS types to allow`Uint8Array` subtypes for `buffer` option ([#865](https://github.com/uuidjs/uuid/issues/865)) ([a5231e7](https://github.com/uuidjs/uuid/commit/a5231e7e1b98c20b23c35402a232167f476b39a2))
+
 ## [11.0.5](https://github.com/uuidjs/uuid/compare/v11.0.4...v11.0.5) (2025-01-09)
 
 
@@ -42,10 +96,10 @@
 
 ### ⚠ BREAKING CHANGES
 
-- refactor v1 internal state and options logic (#780)
-- refactor v7 internal state and options logic, fixes #764 (#779)
-- Port to TypeScript, closes #762 (#763)
-- update node support matrix (only support node 16-20) (#750)
+- refactor v1 internal state and options logic ([#780](https://github.com/uuidjs/uuid/issues/780))
+- refactor v7 internal state and options logic, fixes [#764](https://github.com/uuidjs/uuid/issues/764) ([#779](https://github.com/uuidjs/uuid/issues/779))
+- Port to TypeScript, closes [#762](https://github.com/uuidjs/uuid/issues/762) ([#763](https://github.com/uuidjs/uuid/issues/763))
+- update node support matrix (only support node 16-20) ([#750](https://github.com/uuidjs/uuid/issues/750))
 
 ### Features
 
